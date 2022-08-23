@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
+import org.springframework.jms.core.JmsTemplate;
 
 
 @Configuration
@@ -50,6 +51,18 @@ public class JmsConfig {
         factory.setSubscriptionDurable(isSubscriptionDurable);
         factory.setClientId(clientId);
         return factory;
+    }
+
+    @Bean
+    public JmsTemplate jmsResponseQueueTemplate(ActiveMQConnectionFactory connectionFactory) {
+        return getJmsTemplate(connectionFactory, false);
+    }
+
+    private JmsTemplate getJmsTemplate(ActiveMQConnectionFactory connectionFactory, boolean isPubSumDomain) {
+        JmsTemplate template = new JmsTemplate();
+        template.setConnectionFactory(connectionFactory);
+        template.setPubSubDomain(isPubSumDomain);
+        return template;
     }
 
 }
