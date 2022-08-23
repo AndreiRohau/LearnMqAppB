@@ -11,11 +11,11 @@ import javax.jms.TextMessage;
 
 @Slf4j
 @Component
-public class TopicListener1 {
+public class TopicListenerDurable {
     @Value("${activemq.topic}")
     private String topic;
 
-    @JmsListener(destination = "${activemq.topic}", containerFactory = "topicListenerFactory")
+    @JmsListener(destination = "${activemq.topic}", containerFactory = "topicListenerFactoryDurable")
     public void receiveMessageFromTopic(Message message) throws JMSException {
         TextMessage textMessage = (TextMessage) message;
         String messageData = textMessage.getText();

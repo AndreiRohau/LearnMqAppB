@@ -30,18 +30,25 @@ public class JmsConfig {
 
     @Bean
     public DefaultJmsListenerContainerFactory queueListenerFactory(ActiveMQConnectionFactory connectionFactory) {
-        DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
-        factory.setConnectionFactory(connectionFactory);
-        return factory;
+        return getJmsListener(connectionFactory, false, false, "q-client");
     }
 
     @Bean
-    public DefaultJmsListenerContainerFactory topicListenerFactory(ActiveMQConnectionFactory connectionFactory) {
+    public DefaultJmsListenerContainerFactory topicListenerFactoryDurable(ActiveMQConnectionFactory connectionFactory) {
+        return getJmsListener(connectionFactory, true, true, "t-durable-client");
+    }
+
+    @Bean
+    public DefaultJmsListenerContainerFactory topicListenerFactoryNonDurable(ActiveMQConnectionFactory connectionFactory) {
+        return getJmsListener(connectionFactory, true, false, "t-non-durable-client");
+    }
+
+    private DefaultJmsListenerContainerFactory getJmsListener(ActiveMQConnectionFactory connectionFactory, boolean isPubSubDomain, boolean isSubscriptionDurable, String clientId) {
         DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
-        factory.setPubSubDomain(true);
-        // todo set subscriber durable
-        // factory.setSubscriptionDurable(true);
+        factory.setPubSubDomain(isPubSubDomain);
+        factory.setSubscriptionDurable(isSubscriptionDurable);
+        factory.setClientId(clientId);
         return factory;
     }
 
