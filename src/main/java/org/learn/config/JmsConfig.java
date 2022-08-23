@@ -18,10 +18,6 @@ public class JmsConfig {
     private String brokerUsername;
     @Value("${spring.activemq.password}")
     private String brokerPassword;
-    @Value("${activemq.queue}")
-    private String queueName;
-    @Value("${activemq.topic}")
-    private String topicName;
 
     @Bean
     public ActiveMQConnectionFactory connectionFactory() {
