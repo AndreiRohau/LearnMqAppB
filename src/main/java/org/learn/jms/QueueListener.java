@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Component;
 
 import javax.jms.JMSException;
@@ -21,14 +22,13 @@ public class QueueListener {
     private boolean isSendResponse;
     @Value("${activemq.response.delay}")
     private int delaySeconds;
-    @Value("${activemq.response.queue}")
-    private String responseQueueName;
 
     @Autowired
     private JmsTemplate jmsResponseQueueTemplate;
 
     @JmsListener(destination = "${activemq.queue}", containerFactory = "queueListenerFactory")
-    public void receiveMessageFromQueue(Message message) throws JMSException, InterruptedException {
+    @SendTo("${activemq.response.queue}")
+    public String receiveMessageFromQueue(Message message) throws JMSException, InterruptedException {
         TextMessage textMessage = (TextMessage) message;
         String messageData = textMessage.getText();
         log.info("Received message: " + messageData + ". From queue: " + queue);
@@ -36,8 +36,9 @@ public class QueueListener {
             TimeUnit.SECONDS.sleep(delaySeconds);
             StringBuilder sb = new StringBuilder(messageData);
             sb.reverse();
-            jmsResponseQueueTemplate.convertAndSend(responseQueueName, sb.toString());
             log.info("Processed message: " + sb.toString() + ". From queue: " + queue);
+            return sb.toString();
         }
+        return "Success";
     }
 }
