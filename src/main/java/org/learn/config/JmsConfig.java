@@ -1,11 +1,14 @@
 package org.learn.config;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.learn.example.RequestHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
+
+import javax.jms.*;
 
 
 @Configuration
@@ -19,6 +22,13 @@ public class JmsConfig {
     @Value("${spring.activemq.password}")
     private String brokerPassword;
 
+    @Value("${activemq.transacted}")
+    private boolean transacted;
+    @Value("${activemq.ackMode}")
+    private int ackMode;
+    @Value("${activemq.client.queue.name}")
+    private String clientMqName;
+
     @Bean
     public ActiveMQConnectionFactory connectionFactory() {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory();
@@ -29,27 +39,28 @@ public class JmsConfig {
     }
 
     @Bean
-    public DefaultJmsListenerContainerFactory queueListenerFactory(ActiveMQConnectionFactory connectionFactory) {
-        return getJmsListener(connectionFactory, false, false, "q-client");
+    public Session session() throws JMSException {
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
+        Connection connection = connectionFactory.createConnection();
+        connection.start();
+        Session session = connection.createSession(transacted, ackMode);
+        return session;
     }
 
     @Bean
-    public DefaultJmsListenerContainerFactory topicListenerFactoryDurable(ActiveMQConnectionFactory connectionFactory) {
-        return getJmsListener(connectionFactory, true, true, "t-durable-client");
+    public MessageProducer replyProducer(Session session) throws JMSException {
+        MessageProducer replyProducer = session.createProducer(null);
+        replyProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        return replyProducer;
     }
 
     @Bean
-    public DefaultJmsListenerContainerFactory topicListenerFactoryNonDurable(ActiveMQConnectionFactory connectionFactory) {
-        return getJmsListener(connectionFactory, true, false, "t-non-durable-client");
-    }
+    public MessageConsumer consumer(Session session, RequestHandler requestHandler) throws JMSException {
+        Destination adminQueue = session.createQueue(clientMqName);
 
-    private DefaultJmsListenerContainerFactory getJmsListener(ActiveMQConnectionFactory connectionFactory, boolean isPubSubDomain, boolean isSubscriptionDurable, String clientId) {
-        DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
-        factory.setConnectionFactory(connectionFactory);
-        factory.setPubSubDomain(isPubSubDomain);
-        factory.setSubscriptionDurable(isSubscriptionDurable);
-        factory.setClientId(clientId);
-        return factory;
+        MessageConsumer consumer = session.createConsumer(adminQueue);
+        consumer.setMessageListener(requestHandler);
+        return consumer;
     }
 
 }

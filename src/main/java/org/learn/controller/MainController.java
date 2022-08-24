@@ -11,6 +11,7 @@ public class MainController {
     @Value("${spring.application.name}")
     private String springApplicationName;
 
+
     @GetMapping("/status")
     public String status() {
         final String logMessage = "${spring.application.name}=[" + springApplicationName + "].\n" + "Working!";
