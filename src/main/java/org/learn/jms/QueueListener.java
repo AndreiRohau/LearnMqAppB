@@ -18,27 +18,14 @@ import java.util.concurrent.TimeUnit;
 public class QueueListener {
     @Value("${activemq.queue}")
     private String queue;
-    @Value("${activemq.response.enabled}")
-    private boolean isSendResponse;
-    @Value("${activemq.response.delay}")
-    private int delaySeconds;
 
     @Autowired
     private JmsTemplate jmsResponseQueueTemplate;
 
-    @JmsListener(destination = "${activemq.queue}", containerFactory = "queueListenerFactory")
-    @SendTo("${activemq.response.queue}")
-    public String receiveMessageFromQueue(Message message) throws JMSException, InterruptedException {
+    @JmsListener(destination = "Consumer.myConsumer1.VirtualTopic.MY-SUPER-TOPIC", containerFactory = "queueListenerFactory")
+    public void receiveMessageFromQueue(Message message) throws JMSException, InterruptedException {
         TextMessage textMessage = (TextMessage) message;
         String messageData = textMessage.getText();
         log.info("Received message: " + messageData + ". From queue: " + queue);
-        if (isSendResponse) {
-            TimeUnit.SECONDS.sleep(delaySeconds);
-            StringBuilder sb = new StringBuilder(messageData);
-            sb.reverse();
-            log.info("Processed message: " + sb.toString() + ". From queue: " + queue);
-            return sb.toString();
-        }
-        return "Success";
     }
 }

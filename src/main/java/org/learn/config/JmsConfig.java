@@ -8,7 +8,6 @@ import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.core.JmsTemplate;
 
-
 @Configuration
 @EnableJms
 public class JmsConfig {
@@ -34,16 +33,6 @@ public class JmsConfig {
         return getJmsListener(connectionFactory, false, false, "q-client");
     }
 
-    @Bean
-    public DefaultJmsListenerContainerFactory topicListenerFactoryDurable(ActiveMQConnectionFactory connectionFactory) {
-        return getJmsListener(connectionFactory, true, true, "t-durable-client");
-    }
-
-    @Bean
-    public DefaultJmsListenerContainerFactory topicListenerFactoryNonDurable(ActiveMQConnectionFactory connectionFactory) {
-        return getJmsListener(connectionFactory, true, false, "t-non-durable-client");
-    }
-
     private DefaultJmsListenerContainerFactory getJmsListener(ActiveMQConnectionFactory connectionFactory, boolean isPubSubDomain, boolean isSubscriptionDurable, String clientId) {
         DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
@@ -52,17 +41,4 @@ public class JmsConfig {
         factory.setClientId(clientId);
         return factory;
     }
-
-    @Bean
-    public JmsTemplate jmsResponseQueueTemplate(ActiveMQConnectionFactory connectionFactory) {
-        return getJmsTemplate(connectionFactory, false);
-    }
-
-    private JmsTemplate getJmsTemplate(ActiveMQConnectionFactory connectionFactory, boolean isPubSumDomain) {
-        JmsTemplate template = new JmsTemplate();
-        template.setConnectionFactory(connectionFactory);
-        template.setPubSubDomain(isPubSumDomain);
-        return template;
-    }
-
 }

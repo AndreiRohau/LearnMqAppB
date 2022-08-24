@@ -1,0 +1,30 @@
+<html>
+<head>
+    <title>Consumer Main Page</title>
+</head>
+<body>
+    <h2>Consumer Main Page</h2>
+    <hr/>
+    <p>Consumer an event</p>
+
+    <button onclick="addConsumer()">Add consumer</button>
+
+    <div id="info"></div>
+
+<script>
+const url = window.location.href;
+
+function addConsumer() {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+         document.getElementById("info").innerHTML = this.responseText;
+        }
+    };
+    xhttp.open("GET", url + '/addConsumer', true);
+    xhttp.send();
+}
+
+</script>
+</body>
+</html>
