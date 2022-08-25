@@ -1,3 +1,3 @@
-# LearnAppB
-Consumer for
-https://github.com/AndreiRohau/LearnAppA/tree/mq/activemq/t3
+# PRODUCER-SCALING-CONSUMER pattern
+
+Producer is here https://github.com/AndreiRohau/LearnAppB/tree/mq/activemq/t3
