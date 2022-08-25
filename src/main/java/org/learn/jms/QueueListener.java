@@ -1,36 +1,33 @@
 package org.learn.jms;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.context.annotation.Scope;
 import org.springframework.jms.annotation.JmsListener;
-import org.springframework.jms.core.JmsTemplate;
-import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.stereotype.Component;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.TextMessage;
-import java.util.concurrent.TimeUnit;
+
+import static org.learn.jms.Destination.QUEUE;
 
 @Slf4j
 public class QueueListener {
     private String qid;
 
-    @Value("${activemq.queue}")
+    @Value("Consumer.${activemq.virtual.queue}.VirtualTopic.${activemq.virtual.topic}")
     private String queueName;
 
     public QueueListener(String qid) {
         this.qid = qid;
     }
 
-    @JmsListener(destination = "Consumer.MyCustomConsumer.VirtualTopic.MY-SUPER-TOPIC", containerFactory = "queueListenerFactory")
+    @JmsListener(destination = "Consumer.${activemq.virtual.queue}.VirtualTopic.${activemq.virtual.topic}", containerFactory = "queueListenerFactory")
     public void receiveMessageFromQueue(Message message) throws JMSException {
         TextMessage textMessage = (TextMessage) message;
-        String messageData = textMessage.getText();
-        log.info(qid + " - Received message: " + messageData + ". From queueName: " + queueName);
+        String text = textMessage.getText();
+        log.info("RECEIVED: CONSUMER={}, MSG={}, Q={}", qid, text, queueName);
+        QUEUE.riseProcessed();
+        QUEUE.append("CONSUMER=[" + qid + "], Q=[" + queueName + "], MSG=[" + text + "]");
     }
 
     @Override

@@ -11,37 +11,46 @@ import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import static org.learn.jms.Destination.QUEUE;
 
 @Slf4j
 @RestController
 public class MainController {
     @Value("${spring.application.name}")
     private String springApplicationName;
+    private final Supplier<QueueListener> queueListenerSupplier;
+    private final List<QueueListener> consumers = new ArrayList<>();
+
     @Autowired
-    private Supplier<QueueListener> queueListenerSupplier;
-    private List<QueueListener> consumers = new ArrayList<>();
+    public MainController(Supplier<QueueListener> queueListenerSupplier) {
+        this.queueListenerSupplier = queueListenerSupplier;
+    }
 
     @PostConstruct
     private void postConstruct() {
-        log.info("queueListenerSupplier === {}", queueListenerSupplier);
-        log.info("consumers === {}", consumers);
-        log.info("postConstruct worked");
         addAnotherListener();
     }
 
     @GetMapping("/status")
     public String status() {
-        final String logMessage = "${spring.application.name}=[" + springApplicationName + "].\n" + "Working!";
-        log.info(logMessage);
-        return logMessage;
+        log.info("CALLED: /status");
+        return "[" + springApplicationName + "]. " + "Working!";
+    }
+
+    @GetMapping("/info")
+    public String getInfo() {
+        log.info("CALLED: /info");
+        return "QUEUE:EMITTED/PROCESSED=[" + QUEUE.getEmitted() + "/" + QUEUE.getProcessed() + "]<br/>" +
+                QUEUE.getStringBuilder().toString();
     }
 
     @GetMapping("/addConsumer")
     public String addConsumer() {
-        final String logMessage = "${spring.application.name}=[" + springApplicationName + "].\n" + "Working!";
-        log.info(logMessage);
+        log.info("CALLED /addConsumer");
         addAnotherListener();
-        return consumers.toString();
+        return String.join("<br/>", consumers.stream().map(QueueListener::toString).collect(Collectors.toList()));
     }
 
     private void addAnotherListener() {

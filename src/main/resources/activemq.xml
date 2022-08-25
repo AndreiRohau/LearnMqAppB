@@ -58,16 +58,6 @@
             <topic physicalName="TA"/>
         </destinations>
 
-        <destinationInterceptors>
-            <virtualDestinationInterceptor>
-                <virtualDestinations>
-
-                    <virtualTopic name="VirtualTopic.>" prefix="Consumer.*." selectorAware="false"/>
-                </virtualDestinations>
-            </virtualDestinationInterceptor>
-        </destinationInterceptors>
-
-
         <!--
             The managementContext is used to configure how ActiveMQ is exposed in
             JMX. By default, ActiveMQ uses the MBean server that is started by

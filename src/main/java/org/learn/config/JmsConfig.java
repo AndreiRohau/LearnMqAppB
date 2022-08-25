@@ -24,9 +24,6 @@ public class JmsConfig {
     @Value("${spring.activemq.password}")
     private String brokerPassword;
 
-    @Value("${activemq.queue}")
-    private String queueName;
-
     @Bean
     public ActiveMQConnectionFactory connectionFactory() {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory();
