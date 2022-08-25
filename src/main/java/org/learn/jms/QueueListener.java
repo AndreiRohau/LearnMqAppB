@@ -9,6 +9,8 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.TextMessage;
 
+import static org.learn.jms.Destination.QUEUE;
+
 @Slf4j
 @Component
 public class QueueListener {
@@ -19,6 +21,8 @@ public class QueueListener {
     public void receiveMessageFromQueue(Message message) throws JMSException {
         TextMessage textMessage = (TextMessage) message;
         String messageData = textMessage.getText();
-        log.info("Received message: " + messageData + ". From queue: " + queue);
+        log.info("RECEIVED: MSG=[{}]. Q=[{}].", messageData, queue);
+        QUEUE.riseProcessed();
+        QUEUE.append("[Q___] - " + messageData);
     }
 }

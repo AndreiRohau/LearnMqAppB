@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 
-
 @Configuration
 @EnableJms
 public class JmsConfig {
@@ -47,7 +46,7 @@ public class JmsConfig {
         DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
         factory.setPubSubDomain(isPubSubDomain);
-        factory.setSubscriptionDurable(isSubscriptionDurable);
+        factory.setSubscriptionDurable(isPubSubDomain && isSubscriptionDurable);
         factory.setClientId(clientId);
         return factory;
     }

@@ -9,6 +9,8 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.TextMessage;
 
+import static org.learn.jms.Destination.TOPIC;
+
 @Slf4j
 @Component
 public class TopicListenerNonDurable {
@@ -19,6 +21,8 @@ public class TopicListenerNonDurable {
     public void receiveMessageFromTopic(Message message) throws JMSException {
         TextMessage textMessage = (TextMessage) message;
         String messageData = textMessage.getText();
-        log.info("Received message: " + messageData + ". From topic: " + topic + ". By subscriber 2.");
+        log.info("RECEIVED: [NON_DURABLE]. MSG=[{}]. T=[{}].", messageData, topic);
+        TOPIC.riseProcessed();
+        TOPIC.append("[T_ND] - " + messageData);
     }
 }

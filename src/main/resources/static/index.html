@@ -1,0 +1,35 @@
+<html>
+<head>
+    <title>CONSUMER Main Page</title>
+</head>
+<body>
+<h2>CONSUMER Main Page</h2>
+
+<br/>
+<hr/>
+
+<button onclick="getInfo()" >GET INFO</button>
+
+<p>Processed:</p>
+<div id="info">
+</div>
+
+<script>
+const url = window.location.href;
+
+function getInfo() {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+         document.getElementById("info").innerHTML = this.responseText;
+        }
+    };
+    xhttp.open("GET", url + '/info', true);
+    xhttp.send();
+}
+
+var intervalID = window.setInterval(getInfo, 2000);
+
+</script>
+</body>
+</html>
