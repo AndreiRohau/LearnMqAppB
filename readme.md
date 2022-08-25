@@ -1,3 +1,3 @@
-# LearnAppB
-Subscriber for
-https://github.com/AndreiRohau/LearnAppA/tree/mq/activemq/t1
+# PUBLISHER-SUBSCRIBER pattern
+
+Publisher is here https://github.com/AndreiRohau/LearnAppA/tree/mq/activemq/t1
