@@ -7,6 +7,7 @@ import org.springframework.jms.annotation.JmsListener;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.TextMessage;
+import java.util.concurrent.TimeUnit;
 
 import static org.learn.jms.Destination.QUEUE;
 
@@ -16,6 +17,8 @@ public class QueueListener {
 
     @Value("Consumer.${activemq.virtual.queue}.VirtualTopic.${activemq.virtual.topic}")
     private String queueName;
+    @Value("${emulate.processing.delay}")
+    private int delay;
 
     public QueueListener(String qid) {
         this.qid = qid;
@@ -26,8 +29,17 @@ public class QueueListener {
         TextMessage textMessage = (TextMessage) message;
         String text = textMessage.getText();
         log.info("RECEIVED: CONSUMER={}, MSG={}, Q={}", qid, text, queueName);
+        emulateProcessing();
         QUEUE.riseProcessed();
         QUEUE.append("CONSUMER=[" + qid + "], Q=[" + queueName + "], MSG=[" + text + "]");
+    }
+
+    private void emulateProcessing() {
+        try {
+            TimeUnit.SECONDS.sleep(delay);
+        } catch (InterruptedException e) {
+            log.error("Error during working QueueListener#emulateProcessing(). qid={}", qid);
+        }
     }
 
     @Override
