@@ -1,11 +1,11 @@
 package org.learn.jms;
 
 import lombok.extern.slf4j.Slf4j;
+import org.learn.controller.MainController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.core.JmsTemplate;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Component;
 
 import javax.jms.JMSException;
@@ -19,7 +19,7 @@ public class QueueListener {
     @Value("${activemq.queue}")
     private String queue;
     @Value("${activemq.response.enabled}")
-    private boolean isSendResponse;
+    private boolean isResponseEnabled;
     @Value("${activemq.response.delay}")
     private int delaySeconds;
 
@@ -27,18 +27,28 @@ public class QueueListener {
     private JmsTemplate jmsResponseQueueTemplate;
 
     @JmsListener(destination = "${activemq.queue}", containerFactory = "queueListenerFactory")
-    @SendTo("${activemq.response.queue}")
-    public String receiveMessageFromQueue(Message message) throws JMSException, InterruptedException {
+    public void receiveMessageFromQueue(Message message) throws JMSException, InterruptedException {
         TextMessage textMessage = (TextMessage) message;
         String messageData = textMessage.getText();
-        log.info("Received message: " + messageData + ". From queue: " + queue);
-        if (isSendResponse) {
-            TimeUnit.SECONDS.sleep(delaySeconds);
-            StringBuilder sb = new StringBuilder(messageData);
-            sb.reverse();
-            log.info("Processed message: " + sb.toString() + ". From queue: " + queue);
-            return sb.toString();
+        log.info("RECEIVED==={}. Q={}.", messageData, queue);
+        processResponse(message, messageData);
+    }
+
+    private void processResponse(Message message, String messageData) throws InterruptedException, JMSException {
+        if (isResponseEnabled) {
+            StringBuilder sb = processMessageData(messageData);
+            log.info("PROCESSED==={}. Q={}.", sb.toString(), queue);
+
+            jmsResponseQueueTemplate.convertAndSend(message.getJMSReplyTo(), sb.toString());
+            log.info("REPLY==={}. Q={}.", sb.toString(), message.getJMSReplyTo());
+            MainController.CACHE.add(sb.toString());
         }
-        return "Success";
+    }
+
+    private StringBuilder processMessageData(String messageData) throws InterruptedException {
+        TimeUnit.SECONDS.sleep(delaySeconds);
+        StringBuilder sb = new StringBuilder(messageData);
+        sb.reverse();
+        return sb;
     }
 }

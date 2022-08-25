@@ -53,12 +53,6 @@
             </policyMap>
         </destinationPolicy>
 
-        <destinations>
-            <queue physicalName="QA"/>
-            <topic physicalName="TA"/>
-        </destinations>
-
-
         <!--
             The managementContext is used to configure how ActiveMQ is exposed in
             JMX. By default, ActiveMQ uses the MBean server that is started by

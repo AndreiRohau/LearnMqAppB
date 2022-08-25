@@ -8,7 +8,6 @@ import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.core.JmsTemplate;
 
-
 @Configuration
 @EnableJms
 public class JmsConfig {
@@ -31,24 +30,14 @@ public class JmsConfig {
 
     @Bean
     public DefaultJmsListenerContainerFactory queueListenerFactory(ActiveMQConnectionFactory connectionFactory) {
-        return getJmsListener(connectionFactory, false, false, "q-client");
-    }
-
-    @Bean
-    public DefaultJmsListenerContainerFactory topicListenerFactoryDurable(ActiveMQConnectionFactory connectionFactory) {
-        return getJmsListener(connectionFactory, true, true, "t-durable-client");
-    }
-
-    @Bean
-    public DefaultJmsListenerContainerFactory topicListenerFactoryNonDurable(ActiveMQConnectionFactory connectionFactory) {
-        return getJmsListener(connectionFactory, true, false, "t-non-durable-client");
+        return getJmsListener(connectionFactory, false, false, null);
     }
 
     private DefaultJmsListenerContainerFactory getJmsListener(ActiveMQConnectionFactory connectionFactory, boolean isPubSubDomain, boolean isSubscriptionDurable, String clientId) {
         DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
         factory.setPubSubDomain(isPubSubDomain);
-        factory.setSubscriptionDurable(isSubscriptionDurable);
+        factory.setSubscriptionDurable(isPubSubDomain && isSubscriptionDurable);
         factory.setClientId(clientId);
         return factory;
     }
