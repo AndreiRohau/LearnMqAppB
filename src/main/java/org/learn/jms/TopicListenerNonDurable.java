@@ -18,7 +18,7 @@ public class TopicListenerNonDurable {
     @JmsListener(destination = "${activemq.topic}", containerFactory = "topicListenerFactoryNonDurable")
     public void receiveMessageFromTopic(Message message) throws JMSException {
         TextMessage textMessage = (TextMessage) message;
-        String messageData = textMessage.getText();
-        log.info("Received message: " + messageData + ". From topic: " + topic + ". By subscriber 2.");
+        String text = textMessage.getText();
+        log.info("Received message text: {}. From topic: {}. By subscriber dur 2.", text, topic);
     }
 }

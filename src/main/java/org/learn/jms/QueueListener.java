@@ -18,7 +18,7 @@ public class QueueListener {
     @JmsListener(destination = "${activemq.queue}", containerFactory = "queueListenerFactory")
     public void receiveMessageFromQueue(Message message) throws JMSException {
         TextMessage textMessage = (TextMessage) message;
-        String messageData = textMessage.getText();
-        log.info("Received message: " + messageData + ". From queue: " + queue);
+        String text = textMessage.getText();
+        log.info("Received message text: {}. From queue: {}. By subscriber dur 1.", text, queue);
     }
 }
