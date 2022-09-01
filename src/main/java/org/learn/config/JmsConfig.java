@@ -1,79 +1,61 @@
 package org.learn.config;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import org.learn.jms.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.AmqpRejectAndDontRequeueException;
+import org.springframework.amqp.ImmediateRequeueAmqpException;
+import org.springframework.amqp.core.ExchangeTypes;
+import org.springframework.amqp.rabbit.annotation.Exchange;
+import org.springframework.amqp.rabbit.annotation.Queue;
+import org.springframework.amqp.rabbit.annotation.QueueBinding;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.Message;
 
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
+import static java.lang.Boolean.TRUE;
 
-import static org.learn.config.StringFinals.EXCHANGE_TYPE_TOPIC;
-
+@Slf4j
 @Configuration
 public class JmsConfig {
-
-    @Value("${cloudy.rmq.user}")
-    private String user;
-    @Value("${cloudy.rmq.password}")
-    private String password;
-    @Value("${cloudy.rmq.virtual.host}")
-    private String virtualHost;
-    @Value("${cloudy.rmq.host}")
-    private String host;
-    @Value("${cloudy.rmq.port}")
-    private int port;
-
-    @Value("${rmq.declare.exchange}")
-    private String exchangeName;
-    @Value("${rmq.declare.routing.key}")
-    private String routingKey;
-    @Value("${rmq.declare.queue}")
-    private String queueName;
-    @Value("${rmq.declare.consumer.name}")
+    private static final String HEADER_NAME_AMQP_REDELIVERED = "amqp_redelivered";
+    @Value("${rmq.declare.consumer.name.1}")
     private String consumerName;
-    @Value("${rmq.declare.consumer.name}")
-    private String consumerTag;
+    @Value("${rmq.declare.consumer.name.2}")
+    private String consumerNameAnother;
 
-    @Bean
-    public Connection connection() {
-        try {
-            ConnectionFactory connectionFactory = new ConnectionFactory();
-            connectionFactory.setUsername(user);
-            connectionFactory.setPassword(password);
-            connectionFactory.setVirtualHost(virtualHost);
-            connectionFactory.setHost(host);
-            connectionFactory.setPort(port);
-            Connection connection = connectionFactory.newConnection();
-            declareResources(connection);
-            declareConsumer(connection);
-            return connection;
-        } catch (IOException | TimeoutException e) {
-            throw new RuntimeException(e);
-        }
+    @RabbitListener(
+            bindings = @QueueBinding(
+                    value = @Queue(name = "${rmq.declare.queue.1}", durable = "true"),
+                    key = "${rmq.declare.routing.key.1}",
+                    exchange = @Exchange(name = "${rmq.declare.exchange}", type = ExchangeTypes.TOPIC))
+    )
+    public void listenQueue1(Message<String> in) {
+        doListen(consumerName, in);
     }
 
-    private void declareConsumer(Connection connection) {
-        try {
-            final Channel channel = connection.createChannel();
-            Consumer consumer = new Consumer(channel, consumerName);
-            channel.basicConsume(queueName, false, consumerTag, consumer);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    @RabbitListener(
+            bindings = @QueueBinding(
+                    value = @Queue(name = "${rmq.declare.queue.2}", durable = "true"),
+                    key = "${rmq.declare.routing.key.2}",
+                    exchange = @Exchange(name = "${rmq.declare.exchange}", type = ExchangeTypes.TOPIC))
+    )
+    public void listenQueue2(Message<String> in) {
+        doListen(consumerNameAnother, in);
     }
 
-    private void declareResources(Connection connection) {
-        try (Channel channel = connection.createChannel()) {
-            channel.exchangeDeclare(exchangeName, EXCHANGE_TYPE_TOPIC, true);
-            channel.queueDeclare(queueName, true, false, false, null);
-            channel.queueBind(queueName, exchangeName, routingKey);
-        } catch (IOException | TimeoutException e) {
-            throw new RuntimeException("#channel(Connection connection). " + e);
-        }
-    }
+    private static void doListen(String consumerName, Message<String> in) {
+        log.info(consumerName +
+                ", headers=" + in.getHeaders() +
+                ", payload=" + in.getPayload());
 
+        boolean isAmpqRedelivered = TRUE.equals(in.getHeaders().get(HEADER_NAME_AMQP_REDELIVERED, Boolean.class));
+        if (isAmpqRedelivered) {
+            // when we receive message SECOND TIME it has redelivered=true
+            // then we discard processing this message
+            throw new AmqpRejectAndDontRequeueException("return and discard message");
+        }
+        // when received message FIRST TIME by default redelivered=false
+        // then we kick it back with redelivered=true
+        throw new ImmediateRequeueAmqpException("return with re-queue=true");
+    }
 }
