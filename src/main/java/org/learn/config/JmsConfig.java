@@ -1,25 +1,27 @@
 package org.learn.config;
 
 import lombok.extern.slf4j.Slf4j;
-import org.learn.jms.CustomSink;
-import org.springframework.cloud.stream.annotation.EnableBinding;
-import org.springframework.cloud.stream.annotation.StreamListener;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.Message;
+
+import java.util.function.Consumer;
 
 @Slf4j
 @Configuration
-@EnableBinding({CustomSink.class})
 public class JmsConfig {
 
-    @StreamListener(CustomSink.QUEUE1)
-    public void listenQueue1(Message<String> in) {
-        log.info("Consumer1: " + in.getPayload());
-//		throw new RuntimeException("Demo exception");
+	/*@StreamListener("testSource-in-0")
+	public void processMessage(String message) {
+		queue1Sink().accept(message);
+	}*/
+
+    @Bean
+    public Consumer<String> queue1Sink() {
+        return payload -> log.info("Consumer1: " + payload);
     }
 
-    @StreamListener(CustomSink.QUEUE2)
-    public void listenQueue2(Message<String> in) {
-        log.info("Consumer2: " + in.getPayload());
+    @Bean
+    public Consumer<String> queue2Sink() {
+        return payload -> log.info("Consumer2: " + payload);
     }
 }
