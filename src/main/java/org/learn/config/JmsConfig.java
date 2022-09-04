@@ -19,7 +19,10 @@ public class JmsConfig {
 
     @Bean
     public Consumer<String> queue1Sink() {
-        return payload -> log.info("Consumer1: " + payload);
+        return payload -> {
+            log.info("Consumer1: " + payload);
+            throw new RuntimeException("Couldnt manage this msg...");
+        };
     }
 
     @Bean
