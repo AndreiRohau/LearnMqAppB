@@ -1,6 +1,7 @@
 package org.learn.jms;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.ImmediateAcknowledgeAmqpException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
@@ -27,8 +28,7 @@ public class FailedMessageProcessor {
     }
 
     public void processFailed(Message<?> message) {
-        ErrorMessage errorMessage = (ErrorMessage) message;
-        String msgTxt = new String((byte[]) errorMessage.getOriginalMessage().getPayload());
+        String msgTxt = getMsgTxt(message);
         log.info("_____{}. Processing. MSG={}", processorName, msgTxt);
         streamBridge.send(FAILED_MESSAGE_EXCHANGE,
                 MessageBuilder
@@ -36,5 +36,18 @@ public class FailedMessageProcessor {
                         .setHeader(routingKeyHeader, failedMessageRoutingKey)
                         .build());
         log.info("_____{}. Processed (SENT to FAILED_MSG_Q). MSG={}", processorName, msgTxt);
+        // STOP RE-PUBLISH RETRYING EXCEPTION!
+        throw new ImmediateAcknowledgeAmqpException("Failed after 2 attempts (in fact 3=initial + 2requeued)" + "REMINDING!!! No numbers allowed. Use words.");
+    }
+
+    private String getMsgTxt(Message<?> message) {
+        String msgTxt = null;
+        if (message instanceof ErrorMessage) {
+            ErrorMessage errorMessage = (ErrorMessage) message;
+            msgTxt = new String((byte[]) errorMessage.getOriginalMessage().getPayload());
+        } else {
+            msgTxt = message.getPayload().toString();
+        }
+        return msgTxt;
     }
 }
