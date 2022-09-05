@@ -13,12 +13,10 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class FailedMessageProcessor {
-    private static final String FAILED_MESSAGE_EXCHANGE = "source2-out-0";
     private final String processorName;
-    @Value("${routing.key.header}")
-    private String routingKeyHeader;
-    @Value("${mq.queue2Sink-in-0.consumer.bindingRoutingKey}")
-    private String failedMessageRoutingKey;
+    private static final String FAILED_MESSAGE_EXCHANGE = "failed-out-0";
+    private static final String routingKeyHeader = "myRoutingKey";
+    private static final String routingKey = "routing-queue1";
     @Autowired
     private final StreamBridge streamBridge;
 
@@ -33,7 +31,6 @@ public class FailedMessageProcessor {
         streamBridge.send(FAILED_MESSAGE_EXCHANGE,
                 MessageBuilder
                         .withPayload(msgTxt)
-                        .setHeader(routingKeyHeader, failedMessageRoutingKey)
                         .build());
         log.info("_____{}. Processed (SENT to FAILED_MSG_Q). MSG={}", processorName, msgTxt);
         // STOP RE-PUBLISH RETRYING EXCEPTION!

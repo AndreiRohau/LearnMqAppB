@@ -5,8 +5,10 @@ import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.Message;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -26,15 +28,20 @@ public class CustomConsumer implements Consumer<Message<String>> {
     @Override
     public void accept(Message<String> msg) {
         log.info("_____{}. MSG=[{}]. ATTEMPT", consumerName, msg.getPayload());
-//        log.info(consumerName +
-//                ", payload=" + msg.getPayload() +
-//                ", headers=" + msg.getHeaders());
+        safeSleep(1);
         if (msg.getPayload().matches(CONTAINS_NUMBERS_REGEX)) {
             runRepublishRetryStrategy(msg);
-//            throw new RuntimeException("No numbers allowed. Use words.");
         }
 
         log.info("_____{}. MSG=[{}]. Successfully processed!!!", consumerName, msg.getPayload());
+    }
+
+    private void safeSleep(int seconds) {
+        try {
+            TimeUnit.SECONDS.sleep(seconds);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void runRepublishRetryStrategy(Message<String> msg) {

@@ -7,10 +7,12 @@ import org.springframework.amqp.core.DeclarableCustomizer;
 import org.springframework.amqp.core.Queue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 
+import java.time.Duration;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -25,17 +27,19 @@ public class JmsConfig {
 //        failedMessageProcessor.processFailed(message);
 //    }
 
-    // wellll, I'm probably need to open a jira ticket in spring-cloud-steam-rabbitmq repository
+
     @Bean
-    @ConditionalOnProperty(name = "republish", havingValue = "true")
+    // wellll, I'm probably need to open a jira ticket in spring-cloud-steam-rabbitmq repository
     public DeclarableCustomizer declarableCustomizer() {
         return declarable -> {
             if (declarable instanceof Queue) {
                 var queue = (Queue) declarable;
-                if (queue.getName().equals("demo-queue-1")
-                        || queue.getName().equals("demo-queue-2")) {
+                if (queue.getName().equals("demo-queue1")
+                        || queue.getName().equals("demo-queue2")) {
                     queue.removeArgument("x-dead-letter-exchange");
                     queue.removeArgument("x-dead-letter-routing-key");
+
+                    queue.addArgument("x-dead-letter-exchange", "deadletter-exchange");
                 }
             }
             return declarable;
